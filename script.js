@@ -387,33 +387,42 @@
       const ph = pile.clientHeight;
       bodies.forEach((b) => {
         if (!b.drag) {
-          b.vy += 0.35;
+          b.vy += 0.38;
           b.x += b.vx; b.y += b.vy;
-          b.vx *= 0.99;
-          if (b.x < 8) { b.x = 8; b.vx *= -0.6; }
-          if (b.x > pw - b.w - 8) { b.x = pw - b.w - 8; b.vx *= -0.6; }
-          if (b.y > ph - b.h - 10) { b.y = ph - b.h - 10; b.vy *= -0.45; b.vx *= 0.92; }
-          if (b.y < 8) { b.y = 8; b.vy *= -0.5; }
+          b.vx *= 0.985;
+          b.vy *= 0.99;
         }
       });
-      // Soft AABB separation so pills rest side-by-side without overlapping
-      for (let i = 0; i < bodies.length; i++) {
-        for (let j = i + 1; j < bodies.length; j++) {
-          const a = bodies[i], b = bodies[j];
-          const ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) + 6;
-          const oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) + 6;
-          if (ox > 0 && oy > 0) {
-            if (ox < oy) {
-              const s = a.x < b.x ? -ox * 0.5 : ox * 0.5;
-              if (!a.drag) a.x += s;
-              if (!b.drag) b.x -= s;
-            } else {
-              const s = a.y < b.y ? -oy * 0.5 : oy * 0.5;
-              if (!a.drag) a.y += s;
-              if (!b.drag) b.y -= s;
+      // Multi-pass separation + wall clamping so pills spread naturally and never clip
+      for (let pass = 0; pass < 3; pass++) {
+        for (let i = 0; i < bodies.length; i++) {
+          for (let j = i + 1; j < bodies.length; j++) {
+            const a = bodies[i], b = bodies[j];
+            const ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) + 8;
+            const oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) + 8;
+            if (ox > 0 && oy > 0) {
+              if (ox < oy) {
+                const s = (a.x + a.w * 0.5) < (b.x + b.w * 0.5) ? -ox * 0.5 : ox * 0.5;
+                if (!a.drag) { a.x += s; a.vx += s * 0.12; }
+                if (!b.drag) { b.x -= s; b.vx -= s * 0.12; }
+              } else {
+                const s = (a.y + a.h * 0.5) < (b.y + b.h * 0.5) ? -oy * 0.5 : oy * 0.5;
+                if (!a.drag) a.y += s;
+                if (!b.drag) b.y -= s;
+                // nudge horizontally so stacked pills slide off each other
+                const dir = (a.x + a.w * 0.5) < (b.x + b.w * 0.5) ? -1 : 1;
+                if (!a.drag) a.vx += dir * 0.25;
+                if (!b.drag) b.vx -= dir * 0.25;
+              }
             }
           }
         }
+        bodies.forEach((b) => {
+          if (b.x < 12) { b.x = 12; b.vx = Math.abs(b.vx) * 0.55; }
+          if (b.x > pw - b.w - 12) { b.x = pw - b.w - 12; b.vx = -Math.abs(b.vx) * 0.55; }
+          if (b.y > ph - b.h - 12) { b.y = ph - b.h - 12; b.vy = -Math.abs(b.vy) * 0.35; b.vx *= 0.92; }
+          if (b.y < 12) { b.y = 12; b.vy = Math.abs(b.vy) * 0.4; }
+        });
       }
       bodies.forEach((b) => {
         b.el.style.transform = `translate(${b.x.toFixed(1)}px, ${b.y.toFixed(1)}px) rotate(${b.rot.toFixed(1)}deg)`;
