@@ -402,7 +402,7 @@ svg, img { display: block; }
 .bf-msg.err { color: var(--red); }
 
 .bf-box { position: sticky; top: 140px; display: grid; place-items: center; }
-.mailbox-3d { width: 100%; max-width: 440px; height: 420px; cursor: grab; touch-action: none; }
+.mailbox-3d { width: 100%; max-width: 460px; height: 460px; cursor: grab; touch-action: none; }
 .mailbox-3d:active { cursor: grabbing; }
 
 /* ---------- 7. RAINBOW GRID + DARK TRANSITION CTA ---------- */

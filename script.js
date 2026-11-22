@@ -237,7 +237,7 @@
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 50);
-    camera.position.set(0, 0.45, 5.6);
+    camera.position.set(0, 0.2, 6.45);
 
     const resizeMb = () => {
       const w = mbCanvas.clientWidth || 420;
@@ -428,7 +428,7 @@
       flagCur += (flagTarget - flagCur) * 0.12;
       root.rotation.y = curRY;
       root.rotation.x = curRX;
-      root.position.y = -0.22 + Math.sin(t) * 0.04;
+      root.position.y = 0.08 + Math.sin(t) * 0.04;
       flagPivot.rotation.x = flagCur;
       renderer.render(scene, camera);
       if (!reduceMotion) requestAnimationFrame(renderMb);
