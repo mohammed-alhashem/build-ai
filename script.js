@@ -70,17 +70,163 @@
     setTimeout(() => (lbl.textContent = "Copy CLI"), 1800);
   });
 
-  /* ---------- Hero 3D Parallax Mark ---------- */
-  const hero = $("#hero");
-  const hMark = $("#hero-mark");
-  if (hero && hMark && !reduceMotion) {
-    hero.addEventListener("pointermove", (e) => {
-      const r = hero.getBoundingClientRect();
-      const rx = (((e.clientY - r.top) / r.height) - 0.5) * -10;
-      const ry = (((e.clientX - r.left) / r.width) - 0.5) * 12;
-      hMark.style.transform = `perspective(1000px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+  /* ---------- 1. Interactive 3D WebGL Hero Mark (B A I) ---------- */
+  const heroCanvas = $("#hero-3d");
+  if (heroCanvas && window.THREE) {
+    const renderer = new THREE.WebGLRenderer({ canvas: heroCanvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(36, 1.5, 0.1, 50);
+    camera.position.set(0, 0.1, 6.2);
+
+    const resizeHero = () => {
+      const w = heroCanvas.clientWidth || 600;
+      const h = heroCanvas.clientHeight || 390;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    };
+    resizeHero();
+    window.addEventListener("resize", resizeHero);
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x222233, 1.4));
+    const k1 = new THREE.DirectionalLight(0xffffff, 2.0); k1.position.set(4, 5, 5); scene.add(k1);
+    const k2 = new THREE.DirectionalLight(0x5ac8fa, 1.4); k2.position.set(-4, -2, 3); scene.add(k2);
+    const k3 = new THREE.DirectionalLight(0xff4fd8, 1.2); k3.position.set(2, -4, 4); scene.add(k3);
+
+    const group = new THREE.Group();
+    scene.add(group);
+
+    // Pixel rainbow texture for "B"
+    const pxTex = (() => {
+      const c = document.createElement("canvas");
+      c.width = 256; c.height = 256;
+      const g = c.getContext("2d");
+      const cols = ["#FFE169", "#A8E063", "#5AC8FA", "#7A5BFF", "#FF4FD8", "#FF9500", "#0A84FF"];
+      for (let y = 0; y < 256; y += 32) {
+        for (let x = 0; x < 256; x += 32) {
+          g.fillStyle = cols[((x / 32 + y / 32) % cols.length) | 0];
+          g.fillRect(x + 1, y + 1, 30, 30);
+        }
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    })();
+
+    const bMat = new THREE.MeshPhysicalMaterial({ map: pxTex, roughness: 0.2, metalness: 0.15, clearcoat: 0.9 });
+    const aMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.15, metalness: 0.08, clearcoat: 0.9 });
+    const iMat = new THREE.MeshStandardMaterial({ color: 0xe6ebf5, metalness: 0.92, roughness: 0.14 });
+
+    // Extruded 3D "B"
+    const bShape = new THREE.Shape();
+    bShape.moveTo(-0.7, -0.75); bShape.lineTo(0.25, -0.75);
+    bShape.quadraticCurveTo(0.75, -0.75, 0.75, -0.32);
+    bShape.quadraticCurveTo(0.75, 0, 0.45, 0.05);
+    bShape.quadraticCurveTo(0.7, 0.12, 0.7, 0.44);
+    bShape.quadraticCurveTo(0.7, 0.78, 0.2, 0.78);
+    bShape.lineTo(-0.7, 0.78); bShape.closePath();
+    const bMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(bShape, { depth: 0.36, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.05, bevelSegments: 4 }), bMat);
+    bMesh.geometry.center();
+    bMesh.position.set(-1.1, 0.68, 0);
+    group.add(bMesh);
+
+    // Extruded 3D "A" with electric-blue wireframe edge
+    const aShape = new THREE.Shape();
+    aShape.moveTo(-0.78, -0.75); aShape.lineTo(-0.22, 0.78); aShape.lineTo(0.22, 0.78);
+    aShape.lineTo(0.78, -0.75); aShape.lineTo(0.32, -0.75); aShape.lineTo(0.2, -0.35);
+    aShape.lineTo(-0.2, -0.35); aShape.lineTo(-0.32, -0.75); aShape.closePath();
+    const aHole = new THREE.Path();
+    aHole.moveTo(-0.14, -0.08); aHole.lineTo(0, 0.38); aHole.lineTo(0.14, -0.08); aHole.closePath();
+    aShape.holes.push(aHole);
+    const aGeo = new THREE.ExtrudeGeometry(aShape, { depth: 0.36, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.05, bevelSegments: 4 });
+    aGeo.center();
+    const aMesh = new THREE.Mesh(aGeo, aMat);
+    aMesh.position.set(1.1, 0.68, 0);
+    const aWire = new THREE.LineSegments(new THREE.EdgesGeometry(aGeo, 28), new THREE.LineBasicMaterial({ color: 0x0a84ff }));
+    aMesh.add(aWire);
+    group.add(aMesh);
+
+    // Liquid Chrome 3D "I" slab
+    const iShape = new THREE.Shape();
+    iShape.moveTo(-1.85, -0.42); iShape.lineTo(1.85, -0.42); iShape.lineTo(1.85, -0.14);
+    iShape.lineTo(0.42, -0.14); iShape.lineTo(0.42, 0.14); iShape.lineTo(1.85, 0.14);
+    iShape.lineTo(1.85, 0.42); iShape.lineTo(-1.85, 0.42); iShape.lineTo(-1.85, 0.14);
+    iShape.lineTo(-0.42, 0.14); iShape.lineTo(-0.42, -0.14); iShape.lineTo(-1.85, -0.14); iShape.closePath();
+    const iGeo = new THREE.ExtrudeGeometry(iShape, { depth: 0.45, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.06, bevelSegments: 5 });
+    iGeo.center();
+    const iMesh = new THREE.Mesh(iGeo, iMat);
+    iMesh.position.set(0, -0.78, 0.1);
+    group.add(iMesh);
+
+    let tRY = -0.16, tRX = 0.08, cRY = -0.16, cRX = 0.08, drag = false, lx = 0, ly = 0;
+    heroCanvas.addEventListener("pointerdown", (e) => { drag = true; lx = e.clientX; ly = e.clientY; heroCanvas.setPointerCapture(e.pointerId); });
+    heroCanvas.addEventListener("pointermove", (e) => {
+      if (drag) {
+        tRY += (e.clientX - lx) * 0.012;
+        tRX = Math.max(-0.5, Math.min(0.5, tRX + (e.clientY - ly) * 0.01));
+        lx = e.clientX; ly = e.clientY;
+      } else {
+        const r = heroCanvas.getBoundingClientRect();
+        tRY = (((e.clientX - r.left) / r.width) - 0.5) * 0.45;
+        tRX = (((e.clientY - r.top) / r.height) - 0.5) * 0.25;
+      }
     });
-    hero.addEventListener("pointerleave", () => (hMark.style.transform = ""));
+    heroCanvas.addEventListener("pointerup", () => { drag = false; });
+
+    let ht = 0;
+    const renderHero = () => {
+      ht += 0.018;
+      cRY += (tRY - cRY) * 0.09;
+      cRX += (tRX - cRX) * 0.09;
+      group.rotation.y = cRY + Math.sin(ht * 0.6) * 0.05;
+      group.rotation.x = cRX + Math.cos(ht * 0.5) * 0.03;
+      bMesh.position.y = 0.68 + Math.sin(ht) * 0.06;
+      aMesh.position.y = 0.68 + Math.cos(ht * 0.9) * 0.06;
+      iMesh.position.y = -0.78 + Math.sin(ht * 0.8 + 1) * 0.05;
+      renderer.render(scene, camera);
+      if (!reduceMotion) requestAnimationFrame(renderHero);
+    };
+    renderHero();
+  }
+
+  /* ---------- 2. Interactive Story Bounding Box + Wow Word ---------- */
+  const fBox = $("#frame-box");
+  const fHandle = $("#frame-resize");
+  const fDims = $("#frame-dims");
+  if (fBox && fHandle && fDims) {
+    let resizing = false, sx = 0, sy = 0, padX = 12, padY = 4;
+    fHandle.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+      resizing = true; sx = e.clientX; sy = e.clientY;
+      fBox.classList.add("is-resizing");
+      fHandle.setPointerCapture(e.pointerId);
+    });
+    fHandle.addEventListener("pointermove", (e) => {
+      if (!resizing) return;
+      padX = Math.max(8, Math.min(72, 12 + (e.clientX - sx) * 0.5));
+      padY = Math.max(2, Math.min(28, 4 + (e.clientY - sy) * 0.35));
+      fBox.style.padding = `0 ${padX.toFixed(0)}px ${padY.toFixed(0)}px 12px`;
+      const r = fBox.getBoundingClientRect();
+      fDims.textContent = `${Math.round(r.width)} × ${Math.round(r.height)}`;
+    });
+    fHandle.addEventListener("pointerup", () => { resizing = false; fBox.classList.remove("is-resizing"); });
+  }
+  const wowWord = $("#wow-word");
+  if (wowWord) {
+    const grads = [
+      "linear-gradient(90deg, #5AC8FA, #007AFF, #5856D6, #FF2D55, #FF9500, #FFCC00, #4CD964)",
+      "linear-gradient(90deg, #FF4FD8, #7A5BFF, #2FB6FF, #FFB84F)",
+      "linear-gradient(90deg, #FFFFFF, #8E8E93, #FFFFFF)",
+    ];
+    let gi = 0;
+    wowWord.addEventListener("click", () => {
+      gi = (gi + 1) % grads.length;
+      wowWord.style.backgroundImage = grads[gi];
+    });
   }
 
   /* ---------- Quadtree Iridescent Mosaic Wipe (#000 -> #fff) ---------- */
@@ -99,7 +245,7 @@
     }
   }
 
-  /* ---------- macOS Segmented Tabs ---------- */
+  /* ---------- 3. macOS Segmented Tabs + 3D Tilt + Interactive Controls ---------- */
   $$("[data-tabs]").forEach((bar) => {
     const group = bar.dataset.tabs;
     const panels = $$(`[data-panels="${group}"] .mac-panel`);
@@ -112,6 +258,46 @@
       });
     });
   });
+  $$(".mac-win").forEach((win) => {
+    if (!reduceMotion) {
+      win.addEventListener("pointermove", (e) => {
+        const r = win.getBoundingClientRect();
+        const rx = (((e.clientY - r.top) / r.height) - 0.5) * -4.5;
+        const ry = (((e.clientX - r.left) / r.width) - 0.5) * 4.5;
+        win.style.transform = `perspective(1400px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+      });
+      win.addEventListener("pointerleave", () => (win.style.transform = ""));
+    }
+    const yellow = win.querySelector(".traffic i:nth-child(2)");
+    const green = win.querySelector(".traffic i:nth-child(3)");
+    if (yellow) yellow.addEventListener("click", () => win.classList.toggle("is-min"));
+    if (green) green.addEventListener("click", () => win.classList.remove("is-min"));
+  });
+  $$(".spec-checks li").forEach((li) => {
+    li.addEventListener("click", () => {
+      const checked = li.classList.toggle("is-checked");
+      li.classList.toggle("dim", !checked);
+      li.textContent = (checked ? "✓ " : "○ ") + li.textContent.slice(2);
+    });
+  });
+  $$(".bp-svg rect").forEach((rect) => {
+    rect.addEventListener("click", () => {
+      const on = rect.getAttribute("stroke") === "#0A84FF";
+      rect.setAttribute("stroke", on ? "#d1d1d6" : "#0A84FF");
+      rect.setAttribute("fill", on ? "#fff" : "rgba(10,132,255,.08)");
+    });
+  });
+
+  const rwBubble = $("#rw-bubble");
+  if (rwBubble && !reduceMotion) {
+    rwBubble.addEventListener("pointermove", (e) => {
+      const r = rwBubble.getBoundingClientRect();
+      const rx = (((e.clientY - r.top) / r.height) - 0.5) * -6;
+      const ry = (((e.clientX - r.left) / r.width) - 0.5) * 6;
+      rwBubble.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+    });
+    rwBubble.addEventListener("pointerleave", () => (rwBubble.style.transform = ""));
+  }
 
   /* ---------- Client Reviews Wheel ---------- */
   const reviews = [
@@ -184,6 +370,17 @@
       });
       b.el.addEventListener("pointerup", () => { if (active === b) { b.drag = false; active = null; } });
     });
+
+    const shakeBtn = $("#pile-shake");
+    if (shakeBtn) {
+      shakeBtn.addEventListener("click", () => {
+        bodies.forEach((b) => {
+          b.vy = -(7 + Math.random() * 6);
+          b.vx = (Math.random() - 0.5) * 14;
+          b.rot = (Math.random() - 0.5) * 28;
+        });
+      });
+    }
 
     const step = () => {
       const pw = pile.clientWidth;
@@ -458,32 +655,71 @@
     bForm.reset();
   });
 
-  /* ---------- Rainbow Grid Canvas + Swappable 6 Looks ---------- */
+  /* ---------- 7. Interactive 3D WebGL Rainbow Rings + Swappable Looks ---------- */
   const rg = $("#rg");
   const rgc = $("#rg-canvas");
-  if (rg && rgc) {
-    const ctx = rgc.getContext("2d");
-    let t = 0;
+  if (rg && rgc && window.THREE) {
+    const rRenderer = new THREE.WebGLRenderer({ canvas: rgc, antialias: true, alpha: true });
+    rRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const rScene = new THREE.Scene();
+    const rCam = new THREE.PerspectiveCamera(45, 1.8, 0.1, 100);
+    rCam.position.set(0, 0, 9);
+
+    const resizeRg = () => {
+      const w = rg.clientWidth || 1200, h = rg.clientHeight || 700;
+      rRenderer.setSize(w, h, false);
+      rCam.aspect = w / h;
+      rCam.updateProjectionMatrix();
+    };
+    resizeRg();
+    window.addEventListener("resize", resizeRg);
+
+    const rGroup = new THREE.Group();
+    rScene.add(rGroup);
+    const cols = [0x5ac8fa, 0x0a84ff, 0x5856d6, 0xff2d55, 0xff9500, 0xffcc00, 0x30d158];
+    const rings = cols.map((c, i) => {
+      const m = new THREE.Mesh(
+        new THREE.TorusGeometry(2.2 + i * 0.72, 0.025, 12, 72),
+        new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.38 })
+      );
+      m.rotation.x = i * 0.25;
+      m.rotation.y = i * 0.18;
+      rGroup.add(m);
+      return m;
+    });
+
+    let mx = 0, my = 0;
+    rg.addEventListener("pointermove", (e) => {
+      const r = rg.getBoundingClientRect();
+      mx = (((e.clientX - r.left) / r.width) - 0.5) * 0.6;
+      my = (((e.clientY - r.top) / r.height) - 0.5) * 0.6;
+    });
+
     const drawRg = () => {
-      const w = rg.clientWidth, h = rg.clientHeight;
-      if (rgc.width !== w || rgc.height !== h) { rgc.width = w; rgc.height = h; }
-      ctx.clearRect(0, 0, w, h);
-      const cx = w / 2, cy = h / 2;
-      const cols = ["#5AC8FA", "#0A84FF", "#5856D6", "#FF2D55", "#FF9500", "#FFCC00", "#30D158"];
-      for (let i = 0; i < 9; i++) {
-        const rad = ((i * 95 + t * 22) % 850) + 60;
-        ctx.beginPath();
-        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
-        ctx.strokeStyle = cols[i % cols.length];
-        ctx.globalAlpha = Math.max(0, 0.24 - rad / 3600);
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-      t += 0.016;
+      rings.forEach((m, i) => {
+        m.rotation.x += 0.003 + i * 0.0005;
+        m.rotation.y += 0.004 - i * 0.0004;
+      });
+      rGroup.rotation.y += (mx - rGroup.rotation.y) * 0.06;
+      rGroup.rotation.x += (my - rGroup.rotation.x) * 0.06;
+      rRenderer.render(rScene, rCam);
       if (!reduceMotion) requestAnimationFrame(drawRg);
     };
     drawRg();
+  }
+
+  /* ---------- 9. Spinnable Footer Seal ---------- */
+  const seal = $("#ft-seal");
+  if (seal) {
+    let ang = 0, vel = 0.25;
+    seal.addEventListener("click", () => { vel += 14; });
+    const spinSeal = () => {
+      ang = (ang + vel) % 360;
+      vel = Math.max(0.25, vel * 0.96);
+      seal.style.transform = `rotate(${ang.toFixed(1)}deg)`;
+      if (!reduceMotion) requestAnimationFrame(spinSeal);
+    };
+    spinSeal();
   }
 
   const rgWow = $("#rg-wow");

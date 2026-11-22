@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=5" />
+  <link rel="stylesheet" href="styles.css?v=6" />
 </head>
 <body>
   <!-- Custom global cursor dot + floating visit pill -->
@@ -62,71 +62,8 @@
     <!-- 1. HERO (Pitch black, monumental Pixel + Vector + 3D Chrome mark) -->
     <section class="hero" id="hero">
       <div class="hero-inner">
-        <div class="hero-mark-wrap" id="hero-mark" aria-hidden="true">
-          <svg class="hero-mark" viewBox="0 0 640 420">
-            <defs>
-              <linearGradient id="px-rainbow" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#FFE169"/>
-                <stop offset="28%" stop-color="#A8E063"/>
-                <stop offset="56%" stop-color="#5AC8FA"/>
-                <stop offset="82%" stop-color="#7A5BFF"/>
-                <stop offset="100%" stop-color="#FF4FD8"/>
-              </linearGradient>
-              <pattern id="px-grid" width="16" height="16" patternUnits="userSpaceOnUse">
-                <rect width="15" height="15" fill="url(#px-rainbow)"/>
-                <rect x="0" y="0" width="15" height="15" fill="rgba(255,255,255,0.08)"/>
-              </pattern>
-              <linearGradient id="chrome-top" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#ffffff"/>
-                <stop offset="45%" stop-color="#a8adb5"/>
-                <stop offset="55%" stop-color="#222428"/>
-                <stop offset="100%" stop-color="#f2f4f8"/>
-              </linearGradient>
-              <linearGradient id="chrome-side" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#4e5259"/>
-                <stop offset="40%" stop-color="#111214"/>
-                <stop offset="70%" stop-color="#e3e7ee"/>
-                <stop offset="100%" stop-color="#5ac8fa"/>
-              </linearGradient>
-            </defs>
-
-            <!-- Top-left Pixelated Iridescent "B" -->
-            <g>
-              <path d="M96 36 H222 C254 36 274 54 274 82 C274 102 262 116 244 122 C266 128 280 144 280 168 C280 198 258 214 224 214 H96 Z M156 80 V106 H206 C216 106 222 100 222 93 C222 86 216 80 206 80 Z M156 142 V170 H212 C222 170 228 164 228 156 C228 148 222 142 212 142 Z" fill="url(#px-grid)" fill-rule="evenodd"/>
-              <rect x="112" y="52" width="15" height="15" fill="#FF3B30"/>
-              <rect x="128" y="68" width="15" height="15" fill="#FFCC00"/>
-              <rect x="208" y="164" width="15" height="15" fill="#0A84FF"/>
-              <rect x="240" y="180" width="15" height="15" fill="#FF2D55"/>
-            </g>
-
-            <!-- Top-right Solid White Vector "A" with Blue Anchor Nodes & Bezier Handle -->
-            <g>
-              <path d="M402 36 H472 L544 214 H480 L466 176 H408 L394 214 H330 Z M420 134 H454 L437 84 Z" fill="#FFFFFF" fill-rule="evenodd" stroke="#0A84FF" stroke-width="2.2"/>
-              <line x1="437" y1="134" x2="512" y2="156" stroke="#0A84FF" stroke-width="2"/>
-              <circle cx="437" cy="134" r="5" fill="#0A84FF"/>
-              <circle cx="512" cy="156" r="5" fill="#FFFFFF" stroke="#0A84FF" stroke-width="2"/>
-              <circle cx="402" cy="36" r="5.5" fill="#FFFFFF" stroke="#0A84FF" stroke-width="2.2"/>
-              <circle cx="472" cy="36" r="5.5" fill="#FFFFFF" stroke="#0A84FF" stroke-width="2.2"/>
-              <circle cx="544" cy="214" r="5.5" fill="#FFFFFF" stroke="#0A84FF" stroke-width="2.2"/>
-              <circle cx="480" cy="214" r="5.5" fill="#FFFFFF" stroke="#0A84FF" stroke-width="2.2"/>
-              <circle cx="394" cy="214" r="5.5" fill="#FFFFFF" stroke="#0A84FF" stroke-width="2.2"/>
-              <circle cx="330" cy="214" r="5.5" fill="#FFFFFF" stroke="#0A84FF" stroke-width="2.2"/>
-              <g transform="translate(512, 156)">
-                <path d="M0 0 L28 11 L16 15 L12 28 Z" fill="#000000" stroke="#FFFFFF" stroke-width="2.2" stroke-linejoin="round"/>
-              </g>
-            </g>
-
-            <!-- Bottom 3D Extruded Liquid Chrome "I" Slab -->
-            <g transform="translate(0, 12)">
-              <polygon points="122,226 518,226 544,252 96,252" fill="#d7dbe2"/>
-              <polygon points="164,294 476,294 502,312 138,312" fill="url(#chrome-side)"/>
-              <path d="M96 252 H544 V298 H362 V346 H544 V392 H96 V346 H278 V298 H96 Z" fill="url(#chrome-top)" stroke="rgba(255,255,255,.35)" stroke-width="1"/>
-              <path d="M104 274 C190 264, 260 288, 340 272 C410 258, 480 284, 536 274" fill="none" stroke="#111214" stroke-width="6" opacity=".7"/>
-              <path d="M104 370 C190 358, 260 384, 340 366 C410 350, 480 380, 536 368" fill="none" stroke="#111214" stroke-width="6" opacity=".75"/>
-              <path d="M104 370 C190 358, 260 384, 340 366" fill="none" stroke="#ff6b2c" stroke-width="1.5" opacity=".7"/>
-              <path d="M340 366 C410 350, 480 380, 536 368" fill="none" stroke="#5ac8fa" stroke-width="1.5" opacity=".8"/>
-            </g>
-          </svg>
+        <div class="hero-mark-wrap" id="hero-mark">
+          <canvas id="hero-3d" class="hero-3d" aria-label="Interactive 3D Build AI emblem — drag to rotate"></canvas>
         </div>
 
         <p class="hero-kicker">Build AI — Agent-Native Software Factory</p>
@@ -147,8 +84,8 @@
       <div class="container story-wrap">
         <h1 class="sentence">
           <span>we are an <span class="story-chip">agent-native</span> factory</span>
-          <span>building <span class="frame-box">software<i class="fh tl"></i><i class="fh tr"></i><i class="fh bl"></i><i class="fh br"></i><span class="frame-dims">412 × 68</span><svg class="frame-cursor" viewBox="0 0 20 20" aria-hidden="true"><path d="M2 2l13 5.5-5.5 2L7 15z" fill="#000" stroke="#fff" stroke-width="1.4"/></svg></span><i class="caret" aria-hidden="true"></i> that</span>
-          <span>ships with that <span class="wow-word">VERIFIED</span> trace</span>
+          <span>building <span class="frame-box" id="frame-box">software<i class="fh tl"></i><i class="fh tr"></i><i class="fh bl"></i><i class="fh br" id="frame-resize" title="Drag to resize"></i><span class="frame-dims" id="frame-dims">412 × 68</span><svg class="frame-cursor" viewBox="0 0 20 20" aria-hidden="true"><path d="M2 2l13 5.5-5.5 2L7 15z" fill="#000" stroke="#fff" stroke-width="1.4"/></svg></span><i class="caret" aria-hidden="true"></i> that</span>
+          <span>ships with that <span class="wow-word" id="wow-word" title="Click to switch look">VERIFIED</span> trace</span>
         </h1>
         <p class="story-sub">Turn business intent into production code. Autonomous agents plan, build, and validate every change — traced to the exact requirement it came from.</p>
       </div>
@@ -182,10 +119,10 @@
                   <div class="spec-head"><span class="spec-tag">REQ-1042</span><span class="spec-ok">● AGREED</span></div>
                   <h3>Invoice generation on billing-v2</h3>
                   <p>As Finance, we need invoices produced by billing-v2 so we can retire the legacy renderer before Q3 close.</p>
-                  <ul>
-                    <li>✓ Totals match legacy to the cent for 100% of sampled invoices</li>
-                    <li>✓ Zero customer-visible downtime during cutover</li>
-                    <li>✓ PDF/UA accessibility checks pass automatically</li>
+                  <ul class="spec-checks">
+                    <li class="is-checked">✓ Totals match legacy to the cent for 100% of sampled invoices</li>
+                    <li class="is-checked">✓ Zero customer-visible downtime during cutover</li>
+                    <li class="is-checked">✓ PDF/UA accessibility checks pass automatically</li>
                     <li class="dim">○ Rollback in under 5 minutes via feature flag</li>
                   </ul>
                 </div>
@@ -346,7 +283,8 @@
         </div>
 
         <div class="sv-pile" id="sv-pile" aria-label="Interactive stack toybox — drag or click pieces">
-          <span class="pile-hint">Drag or toss pieces around</span>
+          <span class="pile-hint">Drag, toss, or click pieces</span>
+          <button type="button" class="pile-btn" id="pile-shake">Shake ↻</button>
         </div>
       </div>
     </section>
@@ -484,6 +422,6 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script src="script.js?v=5"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>
