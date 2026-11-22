@@ -385,46 +385,86 @@
     const step = () => {
       const pw = pile.clientWidth;
       const ph = pile.clientHeight;
-      bodies.forEach((b) => {
-        if (!b.drag) {
-          b.vy += 0.38;
-          b.x += b.vx; b.y += b.vy;
-          b.vx *= 0.985;
-          b.vy *= 0.99;
-        }
-      });
-      // Multi-pass separation + wall clamping so pills spread naturally and never clip
-      for (let pass = 0; pass < 3; pass++) {
+      const substeps = 4;
+
+      for (let s = 0; s < substeps; s++) {
+        bodies.forEach((b) => {
+          if (b.drag) return;
+          b.vy += 0.11;
+          b.vx *= 0.995;
+          b.vy *= 0.995;
+          b.x += b.vx / substeps;
+          b.y += b.vy / substeps;
+
+          // Wall collisions
+          if (b.x < 12) { b.x = 12; b.vx = Math.abs(b.vx) * 0.45; }
+          if (b.x > pw - b.w - 12) { b.x = pw - b.w - 12; b.vx = -Math.abs(b.vx) * 0.45; }
+          if (b.y > ph - b.h - 12) {
+            b.y = ph - b.h - 12;
+            if (Math.abs(b.vy) < 0.6) b.vy = 0;
+            else b.vy = -Math.abs(b.vy) * 0.32;
+            b.vx *= 0.94;
+          }
+          if (b.y < 12) { b.y = 12; b.vy = Math.abs(b.vy) * 0.4; }
+        });
+
+        // Pairwise impulse + position resolution
         for (let i = 0; i < bodies.length; i++) {
           for (let j = i + 1; j < bodies.length; j++) {
             const a = bodies[i], b = bodies[j];
-            const ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) + 8;
-            const oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) + 8;
-            if (ox > 0 && oy > 0) {
-              if (ox < oy) {
-                const s = (a.x + a.w * 0.5) < (b.x + b.w * 0.5) ? -ox * 0.5 : ox * 0.5;
-                if (!a.drag) { a.x += s; a.vx += s * 0.12; }
-                if (!b.drag) { b.x -= s; b.vx -= s * 0.12; }
-              } else {
-                const s = (a.y + a.h * 0.5) < (b.y + b.h * 0.5) ? -oy * 0.5 : oy * 0.5;
-                if (!a.drag) a.y += s;
-                if (!b.drag) b.y -= s;
-                // nudge horizontally so stacked pills slide off each other
-                const dir = (a.x + a.w * 0.5) < (b.x + b.w * 0.5) ? -1 : 1;
-                if (!a.drag) a.vx += dir * 0.25;
-                if (!b.drag) b.vx -= dir * 0.25;
+            const ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) + 6;
+            const oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) + 6;
+            if (ox <= 0 || oy <= 0) continue;
+
+            const acx = a.x + a.w * 0.5, acy = a.y + a.h * 0.5;
+            const bcx = b.x + b.w * 0.5, bcy = b.y + b.h * 0.5;
+            let nx = 0, ny = 0, pen = 0;
+            if (ox < oy) {
+              nx = acx < bcx ? -1 : 1;
+              pen = ox;
+            } else {
+              ny = acy < bcy ? -1 : 1;
+              pen = oy;
+            }
+
+            // Positional correction
+            const corr = pen * 0.45;
+            if (!a.drag && !b.drag) {
+              a.x += nx * corr; a.y += ny * corr;
+              b.x -= nx * corr; b.y -= ny * corr;
+            } else if (a.drag && !b.drag) {
+              b.x -= nx * pen; b.y -= ny * pen;
+            } else if (!a.drag && b.drag) {
+              a.x += nx * pen; a.y += ny * pen;
+            }
+
+            // Velocity impulse along collision normal (only if approaching)
+            const rvx = a.vx - b.vx;
+            const rvy = a.vy - b.vy;
+            const velAlongNormal = rvx * nx + rvy * ny;
+            if (velAlongNormal < 0) {
+              const e = Math.abs(velAlongNormal) < 1.2 ? 0 : 0.28;
+              const jImp = -(1 + e) * velAlongNormal * 0.5;
+              if (!a.drag) { a.vx += nx * jImp; a.vy += ny * jImp; }
+              if (!b.drag) { b.vx -= nx * jImp; b.vy -= ny * jImp; }
+              // Gentle slide off top so pills don't balance in tall towers
+              if (ny !== 0) {
+                const slide = (acx < bcx ? -1 : 1) * 0.08;
+                if (!a.drag) a.vx += slide;
+                if (!b.drag) b.vx -= slide;
               }
             }
           }
         }
-        bodies.forEach((b) => {
-          if (b.x < 12) { b.x = 12; b.vx = Math.abs(b.vx) * 0.55; }
-          if (b.x > pw - b.w - 12) { b.x = pw - b.w - 12; b.vx = -Math.abs(b.vx) * 0.55; }
-          if (b.y > ph - b.h - 12) { b.y = ph - b.h - 12; b.vy = -Math.abs(b.vy) * 0.35; b.vx *= 0.92; }
-          if (b.y < 12) { b.y = 12; b.vy = Math.abs(b.vy) * 0.4; }
-        });
       }
+
       bodies.forEach((b) => {
+        if (!b.drag) {
+          if (Math.abs(b.vx) < 0.05) b.vx = 0;
+          if (Math.abs(b.vy) < 0.05 && b.y >= ph - b.h - 13) b.vy = 0;
+          b.rot += (b.vx * 0.15) - b.rot * 0.02;
+          b.rot = Math.max(-18, Math.min(18, b.rot));
+        }
         b.el.style.transform = `translate(${b.x.toFixed(1)}px, ${b.y.toFixed(1)}px) rotate(${b.rot.toFixed(1)}deg)`;
       });
       if (!reduceMotion) requestAnimationFrame(step);
