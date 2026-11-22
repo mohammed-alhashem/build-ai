@@ -226,10 +226,219 @@
     step();
   }
 
-  /* ---------- Brief Form + Animated Mailbox ---------- */
+  /* ---------- Interactive 3D WebGL Mailbox (Three.js) ---------- */
+  const mbCanvas = $("#mailbox-3d");
+  let triggerMailboxSend = () => {};
+  if (mbCanvas && window.THREE) {
+    const renderer = new THREE.WebGLRenderer({ canvas: mbCanvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 50);
+    camera.position.set(0, 0.45, 5.6);
+
+    const resizeMb = () => {
+      const w = mbCanvas.clientWidth || 420;
+      const h = mbCanvas.clientHeight || 420;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    };
+    resizeMb();
+    window.addEventListener("resize", resizeMb);
+
+    // Studio 3-point lighting
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xc9d2e3, 1.35));
+    const key = new THREE.DirectionalLight(0xffffff, 1.7);
+    key.position.set(3.5, 5, 4.5);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0xdbe8ff, 0.9);
+    fill.position.set(-4, 2, 3);
+    scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xffffff, 0.8);
+    rim.position.set(0, 3, -5);
+    scene.add(rim);
+
+    const root = new THREE.Group();
+    root.position.y = -0.25;
+    scene.add(root);
+
+    // Helper: arch shape
+    const makeArch = (w, h) => {
+      const s = new THREE.Shape();
+      const hw = w / 2;
+      const r = hw;
+      const baseH = h - r;
+      s.moveTo(-hw, 0);
+      s.lineTo(hw, 0);
+      s.lineTo(hw, baseH);
+      s.absarc(0, baseH, r, 0, Math.PI, false);
+      s.lineTo(-hw, 0);
+      return s;
+    };
+
+    // Procedural diamond quilt bump map for the front door
+    const quiltTex = (() => {
+      const c = document.createElement("canvas");
+      c.width = 128; c.height = 128;
+      const g = c.getContext("2d");
+      g.fillStyle = "#808080";
+      g.fillRect(0, 0, 128, 128);
+      for (let y = 0; y < 128; y += 16) {
+        for (let x = 0; x < 128; x += 16) {
+          const gr = g.createRadialGradient(x + 8, y + 8, 1, x + 8, y + 8, 9);
+          gr.addColorStop(0, "#ffffff");
+          gr.addColorStop(1, "#505050");
+          g.fillStyle = gr;
+          g.beginPath();
+          g.moveTo(x + 8, y); g.lineTo(x + 16, y + 8); g.lineTo(x + 8, y + 16); g.lineTo(x, y + 8);
+          g.closePath();
+          g.fill();
+        }
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(4, 4);
+      return tex;
+    })();
+
+    const whiteMat = new THREE.MeshPhysicalMaterial({ color: 0xf7f9fc, roughness: 0.16, metalness: 0.04, clearcoat: 0.9, clearcoatRoughness: 0.1 });
+    const doorMat = new THREE.MeshPhysicalMaterial({ color: 0xf0f3f8, roughness: 0.24, metalness: 0.05, clearcoat: 0.7, bumpMap: quiltTex, bumpScale: 0.035 });
+    const blueMat = new THREE.MeshPhysicalMaterial({ color: 0x1656ea, roughness: 0.2, metalness: 0.08, clearcoat: 0.95, clearcoatRoughness: 0.08 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xd8dee8, metalness: 0.85, roughness: 0.2 });
+    const redMat = new THREE.MeshPhysicalMaterial({ color: 0xff282e, roughness: 0.22, metalness: 0.05, clearcoat: 0.85 });
+
+    // Main barrel body
+    const bodyGeo = new THREE.ExtrudeGeometry(makeArch(1.56, 1.48), { depth: 2.2, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.08, bevelSegments: 6, curveSegments: 28 });
+    bodyGeo.center();
+    const body = new THREE.Mesh(bodyGeo, whiteMat);
+    body.position.set(0, 0.72, 0);
+    root.add(body);
+
+    // Quilted front door
+    const doorGeo = new THREE.ExtrudeGeometry(makeArch(1.34, 1.28), { depth: 0.08, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 4, curveSegments: 24 });
+    doorGeo.center();
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(0, 0.7, 1.18);
+    root.add(door);
+
+    // Dark mail slot + 2 embossed pill bars
+    const slot = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.11, 0.08), new THREE.MeshStandardMaterial({ color: 0x15161a, roughness: 0.5 }));
+    slot.position.set(0, 0.78, 1.24);
+    root.add(slot);
+    [-0.18, -0.34].forEach((dy) => {
+      const bar = new THREE.Mesh(new THREE.CapsuleGeometry(0.045, 0.72, 6, 12), whiteMat);
+      bar.rotation.z = Math.PI / 2;
+      bar.position.set(0, 0.7 + dy, 1.25);
+      root.add(bar);
+    });
+
+    // Wrap-around cobalt blue base rim
+    const rimGeo = new THREE.BoxGeometry(1.78, 0.26, 2.42);
+    const blueBase = new THREE.Mesh(rimGeo, blueMat);
+    blueBase.position.set(0, -0.02, 0);
+    root.add(blueBase);
+
+    // Chrome post & round pedestal base
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 1.22, 28), chromeMat);
+    post.position.set(0, -0.74, 0);
+    root.add(post);
+    const pedTop = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.62, 0.1, 36), chromeMat);
+    pedTop.position.set(0, -1.36, 0);
+    root.add(pedTop);
+    const pedRing = new THREE.Mesh(new THREE.TorusGeometry(0.59, 0.045, 14, 36), chromeMat);
+    pedRing.rotation.x = Math.PI / 2;
+    pedRing.position.set(0, -1.36, 0);
+    root.add(pedRing);
+
+    // Side iridescent Build AI sticker
+    const stickerTex = (() => {
+      const c = document.createElement("canvas");
+      c.width = 256; c.height = 192;
+      const g = c.getContext("2d");
+      g.fillStyle = "rgba(255,255,255,0)";
+      g.fillRect(0, 0, 256, 192);
+      const gr = g.createLinearGradient(20, 20, 236, 172);
+      gr.addColorStop(0, "#0894ff"); gr.addColorStop(0.4, "#c959dd"); gr.addColorStop(0.75, "#ff2e54"); gr.addColorStop(1, "#ff9500");
+      g.fillStyle = gr;
+      g.beginPath(); g.roundRect(18, 28, 220, 136, 36); g.fill();
+      g.strokeStyle = "#ffffff"; g.lineWidth = 10; g.stroke();
+      g.fillStyle = "#ffffff"; g.font = "800 44px Inter, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText("BUILD AI", 128, 98);
+      return new THREE.CanvasTexture(c);
+    })();
+    const sticker = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.82), new THREE.MeshBasicMaterial({ map: stickerTex, transparent: true }));
+    sticker.rotation.y = Math.PI / 2;
+    sticker.position.set(0.87, 0.56, -0.35);
+    root.add(sticker);
+
+    // Red flag + machined chrome pivot bolt
+    const flagPivot = new THREE.Group();
+    flagPivot.position.set(0.9, 0.52, 0.42);
+    const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.1, 24), chromeMat);
+    bolt.rotation.z = Math.PI / 2;
+    flagPivot.add(bolt);
+    const flagArm = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.96, 0.11), redMat);
+    flagArm.position.set(0.06, 0.46, 0);
+    flagPivot.add(flagArm);
+    const flagTab = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.28, 0.34), redMat);
+    flagTab.position.set(0.06, 0.8, 0.16);
+    flagPivot.add(flagTab);
+    root.add(flagPivot);
+
+    // Soft contact shadow on floor
+    const shCanvas = document.createElement("canvas");
+    shCanvas.width = 128; shCanvas.height = 128;
+    const sg = shCanvas.getContext("2d");
+    const sgr = sg.createRadialGradient(64, 64, 6, 64, 64, 62);
+    sgr.addColorStop(0, "rgba(0,0,0,0.2)"); sgr.addColorStop(1, "rgba(0,0,0,0)");
+    sg.fillStyle = sgr; sg.fillRect(0, 0, 128, 128);
+    const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shCanvas), transparent: true }));
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.y = -1.42;
+    root.add(shadowPlane);
+
+    // Drag-to-orbit + flag animation
+    let targetRY = -0.62, targetRX = 0.12, curRY = -0.62, curRX = 0.12;
+    let dragging = false, lx = 0, ly = 0, flagTarget = 0.12, flagCur = 0.12;
+
+    mbCanvas.addEventListener("pointerdown", (e) => { dragging = true; lx = e.clientX; ly = e.clientY; mbCanvas.setPointerCapture(e.pointerId); });
+    mbCanvas.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      targetRY += (e.clientX - lx) * 0.01;
+      targetRX = Math.max(-0.35, Math.min(0.45, targetRX + (e.clientY - ly) * 0.008));
+      lx = e.clientX; ly = e.clientY;
+    });
+    mbCanvas.addEventListener("pointerup", () => { dragging = false; });
+
+    triggerMailboxSend = () => {
+      flagTarget = -0.55;
+      targetRY += 0.35;
+      setTimeout(() => { flagTarget = 0.12; }, 3800);
+    };
+
+    let t = 0;
+    const renderMb = () => {
+      t += 0.02;
+      if (!dragging) targetRY += Math.sin(t * 0.4) * 0.0008;
+      curRY += (targetRY - curRY) * 0.1;
+      curRX += (targetRX - curRX) * 0.1;
+      flagCur += (flagTarget - flagCur) * 0.12;
+      root.rotation.y = curRY;
+      root.rotation.x = curRX;
+      root.position.y = -0.22 + Math.sin(t) * 0.04;
+      flagPivot.rotation.x = flagCur;
+      renderer.render(scene, camera);
+      if (!reduceMotion) requestAnimationFrame(renderMb);
+    };
+    renderMb();
+  }
+
+  /* ---------- Brief Form + Animated 3D Mailbox ---------- */
   const bForm = $("#brief-form");
   const bMsg = $("#bf-msg");
-  const mbox = $("#mailbox");
   bForm.addEventListener("submit", (e) => {
     e.preventDefault();
     let ok = true;
@@ -243,11 +452,10 @@
       bMsg.textContent = "Please fill in your name and a valid work email.";
       return;
     }
-    mbox.classList.add("sent");
+    triggerMailboxSend();
     bMsg.className = "bf-msg ok";
     bMsg.textContent = "✓ Mission brief folded and sent. Flag is up!";
     bForm.reset();
-    setTimeout(() => mbox.classList.remove("sent"), 4000);
   });
 
   /* ---------- Rainbow Grid Canvas + Swappable 6 Looks ---------- */
