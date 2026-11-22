@@ -402,9 +402,9 @@ svg, img { display: block; }
 .bf-msg.err { color: var(--red); }
 
 .bf-box { position: sticky; top: 140px; display: grid; place-items: center; }
-.mailbox { width: 100%; max-width: 300px; height: auto; }
-.mb-flag { transform-origin: 237px 136px; transition: transform .5s var(--pop); }
-.mailbox.sent .mb-flag { transform: rotate(-72deg); }
+.mailbox { width: 100%; max-width: 340px; height: auto; }
+.mb-flag { transform-origin: 234px 156px; transition: transform .5s var(--pop); }
+.mailbox.sent .mb-flag { transform: rotate(-28deg); }
 
 /* ---------- 7. RAINBOW GRID + DARK TRANSITION CTA ---------- */
 .rg { position: relative; min-height: 92svh; display: grid; place-items: center; background: #000; color: #fff; overflow: hidden; padding: 100px 24px; }

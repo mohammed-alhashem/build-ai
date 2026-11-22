@@ -395,15 +395,55 @@
         </div>
 
         <div class="bf-box" aria-hidden="true">
-          <svg class="mailbox" id="mailbox" viewBox="0 0 320 340">
-            <rect x="148" y="190" width="24" height="130" rx="6" fill="#d1d1d6"/>
-            <rect x="148" y="190" width="8" height="130" rx="4" fill="#e5e5ea"/>
-            <path d="M70 130 C70 72, 230 72, 230 130 V196 H70 Z" fill="#f2f2f7" stroke="#d1d1d6" stroke-width="2"/>
-            <path d="M180 78 C225 78, 250 100, 250 132 V196 H180 Z" fill="#e5e5ea" stroke="#d1d1d6" stroke-width="2"/>
-            <rect x="192" y="114" width="46" height="64" rx="8" fill="#0A84FF" fill-opacity=".16" stroke="#0A84FF" stroke-width="2"/>
+          <svg class="mailbox" id="mailbox" viewBox="0 0 360 380">
+            <defs>
+              <linearGradient id="mb-top" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f7f8fa"/>
+                <stop offset="55%" stop-color="#eaedf2"/>
+                <stop offset="100%" stop-color="#d5d9e3"/>
+              </linearGradient>
+              <linearGradient id="mb-front" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#e3e6ee"/>
+                <stop offset="100%" stop-color="#cbd0dc"/>
+              </linearGradient>
+              <radialGradient id="mb-shadow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="rgba(0,0,0,.14)"/>
+                <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+              </radialGradient>
+            </defs>
+
+            <!-- Soft ground shadow -->
+            <ellipse cx="184" cy="340" rx="92" ry="18" fill="url(#mb-shadow)"/>
+
+            <!-- Square pedestal base -->
+            <polygon points="122,318 184,302 246,318 184,336" fill="#eceff5"/>
+            <polygon points="122,318 184,336 184,348 122,330" fill="#d8dde8"/>
+            <polygon points="184,336 246,318 246,330 184,348" fill="#c7cddb"/>
+
+            <!-- Square post -->
+            <polygon points="166,204 184,210 184,322 166,316" fill="#e4e8f0"/>
+            <polygon points="184,210 204,204 204,316 184,322" fill="#cdd3e0"/>
+
+            <!-- Isometric Mailbox Barrel Body -->
+            <!-- Top/side curved shell -->
+            <path d="M62,138 C62,82 114,56 156,70 L256,102 C282,110 296,136 296,166 L296,214 L156,226 L62,196 Z" fill="url(#mb-top)"/>
+            <!-- Front arched face -->
+            <path d="M62,138 C62,86 156,86 156,138 L156,204 L62,192 Z" fill="url(#mb-front)"/>
+            <!-- Subtle inner door seam -->
+            <path d="M69,141 C69,96 149,96 149,141 L149,198 L69,188 Z" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
+
+            <!-- Wrap-around Electric Blue Trim Band -->
+            <polygon points="56,190 158,202 158,219 56,207" fill="#2b74ff"/>
+            <polygon points="158,202 302,190 302,208 158,219" fill="#185ee0"/>
+
+            <!-- Red Flag + Silver Pivot Disc -->
             <g class="mb-flag" id="mb-flag">
-              <rect x="234" y="64" width="6" height="72" rx="3" fill="#86868b"/>
-              <rect x="234" y="54" width="38" height="24" rx="5" fill="#FF3B30"/>
+              <g transform="rotate(14 234 156)">
+                <rect x="230" y="64" width="9" height="94" rx="4" fill="#ff333a"/>
+                <path d="M234,64 L264,68 L260,95 L230,91 Z" fill="#ff242c"/>
+              </g>
+              <circle cx="234" cy="156" r="10" fill="#d0d5e0" stroke="#b9c0ce" stroke-width="1.5"/>
+              <circle cx="234" cy="156" r="5" fill="#bcc3d1"/>
             </g>
           </svg>
         </div>
